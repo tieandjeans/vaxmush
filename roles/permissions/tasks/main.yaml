@@ -1,0 +1,34 @@
+# roles/permissions/tasks/main.yml
+
+- name: Set teacher permissions on student directory and subdirectories
+  acl:
+    path: "{{ student_base_dir }}"
+    entity: "{{ teacher_username }}"
+    etype: user
+    permissions: rwx
+    default: yes
+    recursive: yes
+    state: present
+  become: yes
+
+- name: Set default ACL for new files to have teacher access
+  acl:
+    path: "{{ student_base_dir }}"
+    entity: "{{ teacher_username }}"
+    etype: user
+    permissions: rwx
+    default: yes
+    recursive: yes
+    state: present
+  become: yes
+
+- name: Ensure existing files in student directories have teacher permissions
+  acl:
+    path: "{{ student_base_dir }}"
+    entity: "{{ teacher_username }}"
+    etype: user
+    permissions: rwx
+    state: present
+  become: yes
+
+

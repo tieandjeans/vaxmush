@@ -1,0 +1,15 @@
+# vaxmush.yaml
+---
+- name: Configure Classroom Server
+  hosts: classroom_server
+  become: yes
+  vars_files:
+    - vars/common_vars.yaml
+ 
+  roles:
+    - {role: common, tags: common}       # Handles general system setup and package installations
+    - {role: users, tags: users}        # Manages the creation and configuration of user accounts
+    - {role: permissions, tags: permissions}  # Sets permissions and ACLs for directories
+    - {role: bashrc_setup, tags: bashrc} # Sets up and distributes custom .bashrc files
+    - {role: symlinks, tags: symlinks}     # Creates symlinks in studentbin based on a command list
+

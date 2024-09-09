@@ -1,0 +1,38 @@
+# roles/common/tasks/main.yaml
+---
+- name: Install required packages
+  apt:
+    name:
+      - gcc
+      - g++
+      - make
+      - python3
+      - python3-pip
+      - micro
+      - asciinema
+      - byobu
+      - tmux
+      - screen
+      - tree
+      - traceroute
+      - cowsay
+      - net-tools
+      - finger
+      - findutils
+      - ptpython
+      - acl
+    state: present
+    update_cache: yes
+
+- name: Create student base directory
+  file:
+    path: "{{ student_base_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Create studentbin directory
+  file:
+    path: "{{ studentbin_path }}"
+    state: directory
+    mode: '0755'
+

@@ -1,0 +1,9 @@
+# vars/common_vars.yml
+
+# Shared variables across all roles
+student_base_dir: /home/students
+teacher_username: mr_carle
+teacher_pass: notforlong
+studentbin_path: /studentbin
+csv_file: roles/users/files/students.csv
+

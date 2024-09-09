@@ -1,0 +1,22 @@
+---
+- name: Copy .bashrc from ../templates to remote host ( currently /home/students/.model_bashrc )
+  copy:
+    src: "{{ playbook_dir }}/roles/bashrc_setup/templates/model_bashrc.sh"
+    dest: "{{ student_base_dir }}/.model_bashrc"
+
+
+- name: Gather student directories dynamically
+  find:
+    paths: "{{ student_base_dir }}"
+    file_type: directory
+    recurse: no
+  register: student_dirs
+
+- name: Copy .bashrc to student home directories
+  copy:
+    src: "{{ student_base_dir }}/.model_bashrc"  # Path to the current model .bashrc 
+    dest: "{{ item.path }}/.bashrc"        # Destination for each student's .bashrc. can add append, and a flag read
+    remote_src: yes
+    mode: '0444'
+  loop: "{{ student_dirs.files }}"
+  when: student_dirs.matched > 0  # Only proceed if directories were found

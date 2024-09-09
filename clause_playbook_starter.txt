@@ -1,0 +1,111 @@
+
+<ansible_playbook>
+---
+- name: Configure Classroom Server
+  hosts: classroom_server
+  become: yes
+
+  vars:
+    student_base_dir: /home/student
+    teacher_username: teacher
+    studentbin_path: /studentbin
+
+  tasks:
+    - name: Install required packages
+      apt:
+        name:
+          - gcc
+          - g++
+          - make
+          - python3
+          - python3-pip
+          - net-tools
+          - tree
+          - finger
+          - findutils
+          - cowsay
+        state: present
+        update_cache: yes
+
+    - name: Create student base directory
+      file:
+        path: "{{ student_base_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create studentbin directory
+      file:
+        path: "{{ studentbin_path }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create teacher account
+      user:
+        name: "{{ teacher_username }}"
+        groups: sudo
+        shell: /bin/bash
+
+    - name: Set teacher permissions on student directory
+      acl:
+        path: "{{ student_base_dir }}"
+        entity: "{{ teacher_username }}"
+        etype: user
+        permissions: rwx
+        default: yes
+        recursive: yes
+        state: present
+
+    - name: Create user accounts from CSV file
+      hosts: all
+      become: yes
+      vars:
+        csv_file: students.csv
+      tasks:
+        - name: Read CSV file containing user data
+          community.general.read_csv:
+            path: "{{ csv_file }}"
+            key: username
+          register: user_data
+
+    - name: Create user accounts
+      user:
+        name: "{{ item.value.username }}"
+        password: "{{ item.value.password | password_hash('sha512') }}"
+        shell: /bin/bash
+      loop: "{{ user_data.dict | dict2items }}"
+      when: item.value.password is not none
+
+    - name: Create custom .bashrc for students
+      template:
+        src: student_bashrc.j2
+        dest: "{{ student_base_dir }}/.bashrc"
+        mode: '0444'
+
+	
+
+   - name: Create symlinks in studentbin from a command list file
+  hosts: localhost
+  vars:
+    studentbin_path: /path/to/studentbin  # Set your actual destination path here
+    command_list: "{{ lookup('file', 'commands.txt').splitlines() }}"  # Reads and splits the lines into a list
+  tasks:
+    - name: Create symlinks in studentbin
+      file:
+        src: "{{ item }}"
+        dest: "{{ studentbin_path }}/{{ item | basename }}"
+        state: link
+      loop: "{{ command_list }}"
+      
+
+
+    - name: Copy .bashrc to student home directories
+      copy:
+        src: "{{ student_base_dir }}/.bashrc"  # Path to the master .bashrc
+        dest: "{{ item.path }}/.bashrc"        # Destination for each student's .bashrc
+        remote_src: yes
+        mode: '0444'
+      loop: "{{ student_dirs.files }}"
+      when: student_dirs.matched > 0  # Only proceed if directories were found
+
+
+</ansible_playbook>

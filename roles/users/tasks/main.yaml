@@ -1,0 +1,31 @@
+# roles/users/tasks/main.yml
+
+- name: Copy CSV file to remote host
+  copy:
+    src: "{{ playbook_dir }}/roles/users/files/students.csv"
+    dest: "/tmp/students.csv"
+
+- name: Read CSV file containing user data
+  community.general.read_csv:
+    path: "/tmp/students.csv"
+    key: shortname
+  register: user_data
+
+- name: Create user accounts
+  user:
+    name: "{{ item.value.shortname }}"
+    password: "{{ item.value.password | password_hash('sha512') }}"  # Hash the password securely
+    shell: /bin/bash
+    home: "/home/students/{{ item.value.shortname }}"  # Set the home directory under /home/students
+    create_home: yes  # Ensure the home directory is created
+  loop: "{{ user_data.dict | dict2items }}"
+  when: item.value.password is not none
+
+- name: Create teacher account
+  user:
+    name: "{{ teacher_username }}"
+    password: "{{ teacher_pass | password_hash('sha512') }}" 
+    groups: sudo
+    shell: /bin/bash
+    home: "/home/{{ teacher_username }}"  # Specify the home directory for the teacher account if needed
+    create_home: yes

@@ -1,0 +1,9 @@
+---
+- name: Create symlinks in studentbin from a command list file
+  vars:
+    command_list: "{{ lookup('file', 'commands.txt').splitlines() }}"
+  file:
+    src: "{{ item }}"
+    dest: "{{ studentbin_path }}/{{ item | basename }}"
+    state: link
+  loop: "{{ command_list }}"
